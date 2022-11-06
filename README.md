@@ -4,13 +4,6 @@ Simple nodeJS script to connect to Etherscan ([using a free API key](https://doc
 
 This script assumes **all** incoming transactions are proposal awards.
 
-```
-.env - Environment variables to hold target Ethereum address and Etherscan API key
-rewardValues.js - main script
-transactionCache.json - JSON output of collected data for faster subsequent runs
-transactions.csv - CSV report, ordered by transaction date
-```
-
 ## Install, Setup, and Running
 
 1. run `npm install`
