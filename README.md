@@ -26,5 +26,3 @@ Example:
 ```console
 npm rewardValues.js 01-13-2022 02-13-2022 
 ```
-
-Dates out of realistic range will throw an error.

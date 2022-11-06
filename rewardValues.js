@@ -15,7 +15,7 @@ var startDate, endDate;
 
 processArguments = async () => {
     if (process.argv[2]) { // startDate
-        if((/^[0-9]{2}-[0-9]{2}-[0-9]{4}$/.test(process.argv[2]))) {
+        if((/^[0-9]{2}-[0-9]{2}-[0-9]{4}$/.test(process.argv[2])) && new Date(process.argv[2]).toString() !== 'Invalid Date') {
             startDate = process.argv[2];
         } else {
             console.log('Malformed startDate');
@@ -23,7 +23,7 @@ processArguments = async () => {
         }
     }
     if (process.argv[3]) { // endDate
-        if((/^[0-9]{2}-[0-9]{2}-[0-9]{4}$/.test(process.argv[2]))) {
+        if((/^[0-9]{2}-[0-9]{2}-[0-9]{4}$/.test(process.argv[2])) && new Date(process.argv[3]).toString() !== 'Invalid Date') {
             endDate = process.argv[3];
         } else {
             console.log('Malformed endDate');
