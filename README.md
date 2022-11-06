@@ -23,5 +23,6 @@ node rewardValues.js 01-13-2022 02-13-2022
 ---
 ## TODO:
 - Accept multiple addresses
+- Specify fiat currency (from available Coingecko currencies)
 - Formal command line options with arg or yarg
 - User-specified output file
