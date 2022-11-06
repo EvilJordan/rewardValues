@@ -26,3 +26,6 @@ node rewardValues.js 01-13-2022 02-13-2022
 - Specify fiat currency (from available Coingecko currencies)
 - Formal command line options with arg or yarg
 - User-specified output file
+
+
+### _Disclaimer: I am not a tax professional, I know very, very little about anything at all, and I have no idea if the output report would be sufficient for any accountant or tax authority. I built this to help me calculate my own taxes and stay on top of things._
