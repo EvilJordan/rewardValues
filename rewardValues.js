@@ -11,11 +11,28 @@ const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
 });
+var startDate, endDate;
 
-/*
-TODO:
-- Accept date range as CLI options
-*/
+processArguments = async () => {
+    if (process.argv[2]) { // startDate
+        if((/^[0-9]{2}-[0-9]{2}-[0-9]{4}$/.test(process.argv[2]))) {
+            startDate = process.argv[2];
+        } else {
+            console.log('Malformed startDate');
+            return false;
+        }
+    }
+    if (process.argv[3]) { // endDate
+        if((/^[0-9]{2}-[0-9]{2}-[0-9]{4}$/.test(process.argv[2]))) {
+            endDate = process.argv[3];
+        } else {
+            console.log('Malformed endDate');
+            return false;
+        }
+    }
+    return true;
+}
+
 
 wait = (seconds) => {
     const waitTill = new Date(new Date().getTime() + seconds * 1000);
@@ -106,7 +123,25 @@ getPrices = async (transactions, transactionCache) => {
     return true;
 }
 
-getUSDValue = async (transactions) => {
+isTransactionWithinDateRange = (timeStamp, startDate, endDate) => {
+    let startDateTime, endDateTime;
+    if (startDate) {
+        startDateTime = new Date(startDate).getTime();
+    }
+    if (endDate) {
+        endDateTime = new Date(endDate).getTime();
+    }
+    let valid = true;
+    if (startDate && startDateTime && (timeStamp * 1000) <= startDateTime) {
+        valid = false;
+    }
+    if (endDate && endDateTime && (timeStamp * 1000) >= endDateTime) {
+        valid = false;
+    }
+    return valid;
+}
+
+getUSDValue = async (transactions, startDate, endDate) => {
     let totalUSD = 0;
     let totalETH = 0;
     Object.keys(transactions).forEach(function (thisDate) {
@@ -114,9 +149,11 @@ getUSDValue = async (transactions) => {
             return;
         }
         transactions[thisDate]['transactions'].forEach(function (tx) {
-            tx.usdValue = transactions[thisDate].closingPrice * tx.ethValue;
-            totalUSD += tx.usdValue;
-            totalETH += tx.ethValue;
+            if (isTransactionWithinDateRange(tx.timeStamp, startDate, endDate)) {
+                tx.usdValue = transactions[thisDate].closingPrice * tx.ethValue;
+                totalUSD += tx.usdValue;
+                totalETH += tx.ethValue;
+            }
         });
     });
     transactions.totalUSD = totalUSD;
@@ -124,7 +161,7 @@ getUSDValue = async (transactions) => {
     return transactions;
 }
 
-writeData = (transactions) => {
+writeData = (transactions, startDate, endDate) => {
     fs.writeFileSync(TRANSACTIONCACHEFILE, JSON.stringify(transactions, null, 4)); // write out our "cache"
     fs.writeFileSync(OUTPUTFILE, 'Date,USD Closing Price,USD Value,ETH,Block Number,Transaction Hash\n');
     let outputData = {};
@@ -135,16 +172,23 @@ writeData = (transactions) => {
         transactions[thisDate]['transactions'].forEach(function (tx) {
             const dateParts = thisDate.split('-');
             const thisRationalDate = dateParts[1] + '-' + dateParts[0] + '-' + dateParts[2]; // change the date to mm-dd-yyyy
-            outputData[tx.timeStamp] = [thisRationalDate, transactions[thisDate].closingPrice, tx.usdValue, tx.ethValue, tx.blockNumber, tx.hash];
+            if (isTransactionWithinDateRange(tx.timeStamp, startDate, endDate)) {
+                outputData[tx.timeStamp] = [thisRationalDate, transactions[thisDate].closingPrice, tx.usdValue, tx.ethValue, tx.blockNumber, tx.hash];
+            }
         });
     });
-    outputDataSorted = Object.keys(outputData).sort().reduce((obj, key) => { obj[key] = outputData[key]; return obj; }, {}); // sort by transaction timestamp ascending
-    Object.keys(outputDataSorted).forEach(function (tx) {
-        fs.appendFileSync(OUTPUTFILE, outputDataSorted[tx].join(',') + '\n');
-    });
+    if (outputData) {
+        outputDataSorted = Object.keys(outputData).sort().reduce((obj, key) => { obj[key] = outputData[key]; return obj; }, {}); // sort by transaction timestamp ascending
+        Object.keys(outputDataSorted).forEach(function (tx) {
+            fs.appendFileSync(OUTPUTFILE, outputDataSorted[tx].join(',') + '\n');
+        });
+    }
 }
 
 go = async () => {
+    if(!await processArguments()) {
+        return;
+    }
     let transactions = {};
     transactionCache = JSON.parse(fs.readFileSync(TRANSACTIONCACHEFILE));
     await getTXs(transactions, 1, 'txlist');
@@ -153,9 +197,9 @@ go = async () => {
     if (!getPricesResult) { // there was a coingecko error
         return;
     }
-    await getUSDValue(transactions);
+    await getUSDValue(transactions, startDate, endDate);
     // console.log(JSON.stringify(transactions, null, 4));
-    writeData(transactions); // write out our data
+    writeData(transactions, startDate, endDate); // write out our data
     console.log(transactions.totalETH); // total ETH earned
     console.log('\x1b[32m' + formatter.format(transactions.totalUSD) + '\x1b[0m'); // total USD value at time of earnings
 }
