@@ -33,7 +33,6 @@ processArguments = async () => {
     return true;
 }
 
-
 wait = (seconds) => {
     const waitTill = new Date(new Date().getTime() + seconds * 1000);
     while (waitTill > new Date()) {};
@@ -96,7 +95,6 @@ getPrices = async (transactions, transactionCache) => {
         const now = new Date().getTime();
         if (thisDateTime < now) {
             if (transactionCache[thisDate] && transactionCache[thisDate].closingPrice && transactionCache[thisDate].closingPrice !== 0) { // if we already have this data in our "cache," don't pull it again
-                // console.log(thisDate, transactionCache[thisDate].closingPrice);
                 transactions[thisDate].closingPrice = transactionCache[thisDate].closingPrice;
                 continue;
             }
@@ -108,7 +106,6 @@ getPrices = async (transactions, transactionCache) => {
                 return false;
             }
             const response = await request.json();
-            // console.log(thisDate, response.market_data.current_price.usd);
             transactions[thisDate].closingPrice = response.market_data.current_price.usd;
             if (i > 0 && i % 10 === 0) { // coingecko limited to 10 calls per minute
                 console.log(i, '/', numDates);
@@ -116,7 +113,6 @@ getPrices = async (transactions, transactionCache) => {
                 wait(WAITSECONDS);
             }
         } else {
-            // console.log(thisDate, 0);
             transactions[thisDate].closingPrice = 0;
         }
     }
@@ -198,7 +194,6 @@ go = async () => {
         return;
     }
     await getUSDValue(transactions, startDate, endDate);
-    // console.log(JSON.stringify(transactions, null, 4));
     writeData(transactions, startDate, endDate); // write out our data
     console.log(transactions.totalETH); // total ETH earned
     console.log('\x1b[32m' + formatter.format(transactions.totalUSD) + '\x1b[0m'); // total USD value at time of earnings
