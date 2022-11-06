@@ -19,13 +19,13 @@ transactions.csv - CSV report, ordered by transaction date
 ADDRESS=0X_ETHEREUM_ADDRESS
 ETHERSCANAPIKEY=YOUR_ETHERSCAN_API_KEY
 ```
-3. `npm rewardValues.js`
+3. `node rewardValues.js`
 ---
 It is also possible to pass a `startDate` and `endDate` at the command line to limit the range of the output data. Dates must be formed like `mm-dd-yyyy`. Omitting the `endDate` will output from `startDate` until `now`. Omitting both outputs everything.
 
 Example:
 ```console
-npm rewardValues.js 01-13-2022 02-13-2022 
+node rewardValues.js 01-13-2022 02-13-2022 
 ```
 ---
 ## TODO:
