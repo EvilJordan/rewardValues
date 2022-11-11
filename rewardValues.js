@@ -188,7 +188,14 @@ go = async () => {
         return;
     }
     let transactions = {};
-    transactionCache = JSON.parse(fs.readFileSync(TRANSACTIONCACHEFILE));
+    let transactionCache = {};
+    try {
+        transactionCache = JSON.parse(fs.readFileSync(TRANSACTIONCACHEFILE));
+    } catch (err) {
+        if (err.code !== 'ENOENT') {
+            throw err;
+        }
+    }
     await getTXs(transactions, 1, 'txlist');
     await getTXs(transactions, 1, 'getminedblocks');
     const getPricesResult = await getPrices(transactions, transactionCache);
