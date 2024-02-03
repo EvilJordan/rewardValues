@@ -273,7 +273,7 @@ const getTXs = async (transactions, page, action) => {
 const getPrices = async (transactions, transactionCache) => {
 	let priceByDate = {};
 	const numBlocks = Object.keys(transactions).length;
-	progressBar = new cliProgress.SingleBar({ format: 'Retrieving closing day prices: [{bar}] {percentage}% | {value}/{total}' }, cliProgress.Presets.rect);
+	progressBar = new cliProgress.SingleBar({ format: 'Retrieving closing day prices: [{bar}] {percentage}%' }, cliProgress.Presets.rect);
 	progressBar.start(numBlocks, 0);
 	let coingGeckoCalls = 0;
 	let i;
