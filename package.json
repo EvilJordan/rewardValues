@@ -1,0 +1,18 @@
+{
+  "name": "rewardValues",
+  "version": "1.0.0",
+  "description": "",
+  "main": "rewardValues.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cli-progress": "^3.12.0",
+    "dotenv": "^16.0.3",
+    "ethers": "^6.3.0",
+    "node-fetch": "^3.3.2",
+    "yargs": "^17.7.2"
+  }
+}
