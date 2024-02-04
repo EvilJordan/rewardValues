@@ -287,7 +287,7 @@ const getPrices = async (transactions, transactionCache) => {
 		// need to check if thisDate > today, and if so, just return 0 since we don't have a closing price yet
 		const dateParts = thisDate.split('-');
 		const thisDateFormatted = new Date(dateParts[1] + '-' + dateParts[0] + '-' + dateParts[2]);
-		thisDateFormatted.setDate(thisDateFormatted.getUTCDate() + 1); // this is how we get the closing price for the day we actually want (thisDateFormatted)
+		thisDateFormatted.setDate(thisDateFormatted.getUTCDate());
 		const thisDateTime = thisDateFormatted.getTime();
 		const day = (thisDateFormatted.getUTCDate().toString().length > 1 ? thisDateFormatted.getUTCDate() : 0 + thisDateFormatted.getUTCDate().toString());
 		const month = (thisDateFormatted.getUTCMonth() + 1).toString().length > 1 ? (thisDateFormatted.getUTCMonth() + 1) : 0 + (thisDateFormatted.getUTCMonth() + 1).toString();
@@ -302,6 +302,7 @@ const getPrices = async (transactions, transactionCache) => {
 			if (Object.keys(prices).length > 0) { // use our secondary cache if available
 				if (prices[thisDate]['blocks'].indexOf(thisBlock) != -1) {
 					transactions[thisBlock].closingPrice = prices[thisDate].closingPrice;
+					console.log('2 got price:', prices[thisDate].closingPrice);
 					continue;
 				}
 			}
