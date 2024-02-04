@@ -18,7 +18,7 @@ const argv = yargs(hideBin(process.argv))
 	.wrap(null)
 	.describe('startDate', 'start date in mm-dd-yyyy')
 	.describe('endDate', 'end date in mm-dd-yyyy - omitting endDate when including startDate will set endDate to "now"')
-	.describe('startBlock', 'start block number - omitting will set to the latest available block number since the last time successfully run, or 17034893 (shapella activation block) if never run before')
+	.describe('startBlock', 'start block number - omitting will set to the latest available block number since the last time successfully run, or 0 if never run before. withdrawal minimum block number is 17034893 (shapella activation)')
 	.describe('endBlock', 'end block number - omitting will set to the latest mainnet block')
 	.describe('wipeWithdrawals', 'wipe all withdrawal data from the transaction cache, immediately write out, then exit')
 	.describe('wipeTransactions', 'wipe all transaction data from the transaction cache, immediately write out, then exit')
@@ -43,7 +43,7 @@ const NONTAXABLEADDRESSES = [ // change from using uniswap routers
 ];
 let transactions = {};
 let prices = {};
-let startingTransactionBlockNumber = 17034893;
+let startingTransactionBlockNumber = 0;
 let startingWithdrawalsBlockNumber = 17034893;
 let endingBlockNumber = 9999999999;
 let startDate, endDate, progressBar;
@@ -68,10 +68,6 @@ const processArguments = async () => {
 			console.log('Malformed endDate');
 			return false;
 		}
-	}
-	if (argv.startBlock && argv.startBlock < 17034893) { // shapella activation block
-		console.log('startBlock is too early');
-		return false;
 	}
 	return true;
 }
@@ -497,11 +493,13 @@ const go = async () => {
 	if (Object.keys(transactionCache).length > 0) {
 		transactions = transactionCache;
 	}
+
 	if (argv.extractPrices) {
 		prices = extractPrices();
 		return;
 	}
 	prices = await loadPrices();
+
 	if (argv.wipeWithdrawals) {
 		Object.keys(transactions).forEach(function (thisBlock) {
 			delete transactions[thisBlock].withdrawals;
@@ -516,19 +514,22 @@ const go = async () => {
 		writeData(transactions, startDate, endDate); // write out our data
 		return;
 	}
+
 	startingWithdrawalsBlockNumber = await getStartingBlockNumber('withdrawals');
 	startingTransactionBlockNumber = await getStartingBlockNumber('transactions');
+	if (argv.startBlock) {
+		startingTransactionBlockNumber = argv.startBlock;
+		startingWithdrawalsBlockNumber = argv.startBlock < 17034893 ? 17034893 : argv.startBlock;
+	}
 	if (argv.endBlock) {
 		endingBlockNumber = argv.endBlock;
 	}
-	if (argv.startBlock) {
-		startingWithdrawalsBlockNumber = argv.startBlock;
-	}
-	// console.log('Starting Withdrawals Block Number is', startingWithdrawalsBlockNumber);
-	// console.log('Starting Transaction Block Number is', startingTransactionBlockNumber);
-	// console.log('Ending Block Number is', endingBlockNumber);
+
+	console.log('Setting transaction starting block to:', startingTransactionBlockNumber);
+	console.log('Setting withdrawals starting block to:', startingWithdrawalsBlockNumber);
+	console.log('Setting ending block to:', argv.endBlock ? endingBlockNumber : '\x1b[33mlatest\x1b[0m');
 	
-	progressBar = new cliProgress.SingleBar({ format: 'Retrieving transactions and withdrawals...: [{bar}]', barsize: 3 }, cliProgress.Presets.rect);
+	progressBar = new cliProgress.SingleBar({ format: 'Retrieving transactions and withdrawals: [{bar}]', barsize: 3 }, cliProgress.Presets.rect);
 	progressBar.start(4, 0);
 	await getTXs(transactions, 1, 'txlist');
 	progressBar.increment();
