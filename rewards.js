@@ -18,10 +18,10 @@ const argv = yargs(hideBin(process.argv))
 	.wrap(null)
 	.describe('startDate', 'start date in mm-dd-yyyy')
 	.describe('endDate', 'end date in mm-dd-yyyy - omitting endDate when including startDate will set endDate to "now"')
-	.describe('startBlock', 'start block number - omitting will set to the latest available block number since the last time successfully ran, or 0 if never run before')
+	.describe('startBlock', 'start block number - omitting will set to the latest available block number since the last time successfully run, or 17034893 (shapella activation block) if never run before')
 	.describe('endBlock', 'end block number - omitting will set to the latest mainnet block')
-	.describe('wipeWithdrawals', 'wipe all withdrawal data from the transaction cache and immediately write out, then exit')
-	.describe('wipeTransactions', 'wipe all transaction data from the transaction cache and immediately write out, then exit')
+	.describe('wipeWithdrawals', 'wipe all withdrawal data from the transaction cache, immediately write out, then exit')
+	.describe('wipeTransactions', 'wipe all transaction data from the transaction cache, immediately write out, then exit')
 	.describe('extractPrices', 'extract prices by block/date into object and write to disk')
 	.argv;
 const ADDRESS = process.env.ADDRESS;
@@ -43,8 +43,8 @@ const NONTAXABLEADDRESSES = [ // change from using uniswap routers
 ];
 let transactions = {};
 let prices = {};
-let startingTransactionBlockNumber = 0;
-let startingWithdrawalsBlockNumber = 0;
+let startingTransactionBlockNumber = 17034893;
+let startingWithdrawalsBlockNumber = 17034893;
 let endingBlockNumber = 9999999999;
 let startDate, endDate, progressBar;
 
