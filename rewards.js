@@ -43,7 +43,8 @@ const NONTAXABLEADDRESSES = [ // change from using uniswap routers
 ];
 let transactions = {};
 let prices = {};
-let startingBlockNumber = 0;
+let startingTransactionBlockNumber = 0;
+let startingWithdrawalsBlockNumber = 0;
 let endingBlockNumber = 9999999999;
 let startDate, endDate, progressBar;
 
@@ -88,18 +89,20 @@ const wait = (seconds) => {
 }
 
 /**
- * get most recently retrieved block number from transaction cache
+ * get most recently retrieved block number +1 from transaction cache
+ * @param {string} blockType - withdrawals or transactions
  * @returns {Promise<Number>}
  */
-const getStartingBlockNumber = async () => {
+const getStartingBlockNumber = async (blockType) => {
+	let startingBlockNumber = 0;
 	Object.keys(transactions).forEach(function (thisBlock) {
-		if (transactions[thisBlock].withdrawals) {
+		if (transactions[thisBlock][blockType]) {
 			if (startingBlockNumber < thisBlock) {
 				startingBlockNumber = thisBlock;
 			}
 		}
 	});
-	return startingBlockNumber;
+	return Number(startingBlockNumber + 1);
 }
 
 /**
@@ -127,9 +130,8 @@ const isDuplicateWithdrawal = async (transactions, blockNumber, withdrawalIndex)
  * @returns {Object} transactions
  */
 const getWithdrawals = async (transactions, page) => {
-	let params = '&startblock=' + startingBlockNumber + '&endblock=' + endingBlockNumber;
+	let params = '&startblock=' + startingWithdrawalsBlockNumber + '&endblock=' + endingBlockNumber;
 	const URL = 'https://api.etherscan.io/api?module=account&action=txsBeaconWithdrawal&address=' + ADDRESS + params + '&page=' + page + '&offset=1000&sort=asc&apikey=' + ETHERSCANAPIKEY;
-	// console.log(URL);
 	const request = await fetch(URL, {
 		method: 'GET'
 	});
@@ -202,7 +204,7 @@ const isDuplicateTx = async (transactions, hash, blockNumber, ethValue, timeStam
  * @returns {Object} transactions
  */
 const getTXs = async (transactions, page, action) => {
-	let params = '&startblock=0&endblock=99999999';
+	let params = '&startblock=' + startingTransactionBlockNumber + '&endblock=' + endingBlockNumber;
 	if (action !== 'txlist') {
 		params = '&blocktype=blocks';
 	}
@@ -514,15 +516,16 @@ const go = async () => {
 		writeData(transactions, startDate, endDate); // write out our data
 		return;
 	}
+	startingWithdrawalsBlockNumber = await getStartingBlockNumber('withdrawals');
+	startingTransactionBlockNumber = await getStartingBlockNumber('transactions');
 	if (argv.endBlock) {
 		endingBlockNumber = argv.endBlock;
 	}
 	if (argv.startBlock) {
-		startingBlockNumber = argv.startBlock;
-	} else {
-		startingBlockNumber = await getStartingBlockNumber();
+		startingWithdrawalsBlockNumber = argv.startBlock;
 	}
-	// console.log('Starting Block Number is', startingBlockNumber);
+	// console.log('Starting Withdrawals Block Number is', startingWithdrawalsBlockNumber);
+	// console.log('Starting Transaction Block Number is', startingTransactionBlockNumber);
 	// console.log('Ending Block Number is', endingBlockNumber);
 	
 	progressBar = new cliProgress.SingleBar({ format: 'Retrieving transactions and withdrawals...: [{bar}]', barsize: 3 }, cliProgress.Presets.rect);
