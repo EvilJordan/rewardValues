@@ -98,7 +98,7 @@ const getStartingBlockNumber = async (blockType) => {
 			}
 		}
 	});
-	return Number(startingBlockNumber + 1);
+	return Number(startingBlockNumber) + 1;
 }
 
 /**
