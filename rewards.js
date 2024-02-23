@@ -98,6 +98,9 @@ const getStartingBlockNumber = async (blockType) => {
 			}
 		}
 	});
+	if (blockType === 'withdrawals' && Number(startingBlockNumber) === 0) {
+		return 17034893; // shapella
+	}
 	return Number(startingBlockNumber) + 1;
 }
 
@@ -282,17 +285,17 @@ const getPrices = async (transactions, transactionCache) => {
 			transactions[thisBlock].closingPrice = priceByDate[thisDate];
 			continue;
 		}
-		// need to check if thisDate > today, and if so, just return 0 since we don't have a closing price yet
+
 		const dateParts = thisDate.split('-');
 		const thisDateFormatted = new Date(dateParts[1] + '-' + dateParts[0] + '-' + dateParts[2]);
-		thisDateFormatted.setDate(thisDateFormatted.getUTCDate());
+		thisDateFormatted.setDate(thisDateFormatted.getUTCDate() + 1); // must add 1 day to the date so we get the closing price of the previous day
 		const thisDateTime = thisDateFormatted.getTime();
 		const day = (thisDateFormatted.getUTCDate().toString().length > 1 ? thisDateFormatted.getUTCDate() : 0 + thisDateFormatted.getUTCDate().toString());
 		const month = (thisDateFormatted.getUTCMonth() + 1).toString().length > 1 ? (thisDateFormatted.getUTCMonth() + 1) : 0 + (thisDateFormatted.getUTCMonth() + 1).toString();
 		const thisDateAdjustedCoinGecko = day + '-' + month + '-' + thisDateFormatted.getUTCFullYear(); // coingecko date is dd-mm-yyyy
 
 		const now = new Date().getTime();
-		if (thisDateTime < now) {
+		if (thisDateTime < now) { // check if thisDate > today, and if so, just return 0 since we don't have a closing price yet
 			if (transactionCache[thisBlock] && transactionCache[thisBlock].closingPrice && transactionCache[thisBlock].closingPrice !== 0) { // if we already have this data in our "cache," don't pull it again
 				transactions[thisBlock].closingPrice = transactionCache[thisBlock].closingPrice;
 				continue;
