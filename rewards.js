@@ -73,6 +73,21 @@ const processArguments = async () => {
 }
 
 /**
+ * Returns the UTC timestamp of now, avoiding local client timezones
+ * @returns {Number}
+ */
+const UTCTime = () => {
+	return new Date(
+		new Date().getUTCFullYear(),
+		new Date().getUTCMonth(),
+		new Date().getUTCDate(),
+		new Date().getUTCHours(),
+		new Date().getUTCMinutes(), 
+		new Date().getUTCSeconds()
+	).getTime(); 
+}
+
+/**
  * Pause execution for a number of seconds
  * @param {Number} seconds - number of second to pause
  * @returns {void}
@@ -294,8 +309,7 @@ const getPrices = async (transactions, transactionCache) => {
 		const month = (thisDateFormatted.getUTCMonth() + 1).toString().length > 1 ? (thisDateFormatted.getUTCMonth() + 1) : 0 + (thisDateFormatted.getUTCMonth() + 1).toString();
 		const thisDateAdjustedCoinGecko = day + '-' + month + '-' + thisDateFormatted.getUTCFullYear(); // coingecko date is dd-mm-yyyy
 
-		const now = new Date().getTime();
-		if (thisDateTime < now) { // check if thisDate > today, and if so, just return 0 since we don't have a closing price yet
+		if (thisDateTime < UTCTime()) { // check if thisDate > today, and if so, just return 0 since we don't have a closing price yet
 			if (transactionCache[thisBlock] && transactionCache[thisBlock].closingPrice && transactionCache[thisBlock].closingPrice !== 0) { // if we already have this data in our "cache," don't pull it again
 				transactions[thisBlock].closingPrice = transactionCache[thisBlock].closingPrice;
 				continue;
