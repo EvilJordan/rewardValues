@@ -333,8 +333,13 @@ const getPrices = async (transactions, transactionCache) => {
 				return false;
 			}
 			const response = await request.json();
-			priceByDate[thisDate] = response.market_data.current_price.usd;
-			transactions[thisBlock].closingPrice = response.market_data.current_price.usd;
+			if (response.market_data && response.market_data.current_price.usd) {
+				priceByDate[thisDate] = response.market_data.current_price.usd;
+				transactions[thisBlock].closingPrice = response.market_data.current_price.usd;
+			} else {
+				priceByDate[thisDate] = 0;
+				transactions[thisBlock].closingPrice = 0;
+			}
 			coingGeckoCalls++;
 			if (coingGeckoCalls >= COINGECKOREQUESTSIZE) { // coingecko limited to 30 calls per minute with Demo API key
 				console.log(' Hit', coingGeckoCalls, 'requests. Backing off for', COINGECKOWAITSECONDS, 'seconds...');
