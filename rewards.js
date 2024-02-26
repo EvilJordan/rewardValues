@@ -167,7 +167,7 @@ const getWithdrawals = async (transactions, page) => {
 				const txClosingPriceDate = day + '-' + month + '-' + date.getUTCFullYear(); // coingecko date is dd-mm-yyyy
 				
 				if (!transactions[tx.blockNumber]) {
-					transactions[tx.blockNumber] = { date: txClosingPriceDate, withdrawals: [] };
+					transactions[tx.blockNumber] = { date: txClosingPriceDate, timestamp: Number(tx.timestamp), withdrawals: [] };
 				}
 				if (!transactions[tx.blockNumber].withdrawals) {
 					transactions[tx.blockNumber].withdrawals = [];
@@ -176,7 +176,7 @@ const getWithdrawals = async (transactions, page) => {
 				const ethValue = Number(ethers.formatUnits(tx.amount, 'gwei'));
 				const isDuplicate = await isDuplicateWithdrawal(transactions, tx.blockNumber, tx.withdrawalIndex);
 				if (!isDuplicate) {
-					transactions[tx.blockNumber].withdrawals.push({ timeStamp: Number(tx.timestamp), withdrawalIndex: Number(tx.withdrawalIndex), ethValue });
+					transactions[tx.blockNumber].withdrawals.push({ withdrawalIndex: Number(tx.withdrawalIndex), ethValue });
 				}
 			}
 			page += 1;
@@ -200,10 +200,11 @@ const getWithdrawals = async (transactions, page) => {
  * @returns {Promise<Boolean>}
  */
 const isDuplicateTx = async (transactions, hash, blockNumber, ethValue, timeStamp) => {
+	const blockTimestamp = transactions[blockNumber].timestamp;
 	let i;
 	for (i = 0; i < transactions[blockNumber].transactions.length; i++) {
 		const tx = transactions[blockNumber].transactions[i];
-		if (tx.hash === hash && Number(tx.ethValue) === Number(ethValue) && Number(tx.timeStamp) === Number(timeStamp)) {
+		if (tx.hash === hash && Number(tx.ethValue) === Number(ethValue) && blockTimestamp === Number(timeStamp)) {
 			return true;
 		}
 	}
@@ -251,13 +252,13 @@ const getTXs = async (transactions, page, action) => {
 					taxable = false;
 				}
 
-				const date = new Date(tx.timeStamp * 1000);
+				const date = new Date(tx.timeStamp * 1000); // timeStamp is camelCase in the return for these API calls
 				const day = (date.getUTCDate().toString().length > 1 ? date.getUTCDate() : 0 + date.getUTCDate().toString());
 				const month = (date.getUTCMonth() + 1).toString().length > 1 ? (date.getUTCMonth() + 1) : 0 + (date.getUTCMonth() + 1).toString();
 				const txClosingPriceDate = day + '-' + month + '-' + date.getUTCFullYear(); // coingecko date is dd-mm-yyyy
 
 				if (!transactions[tx.blockNumber]) {
-					transactions[tx.blockNumber] = { date: txClosingPriceDate, transactions: [] };
+					transactions[tx.blockNumber] = { date: txClosingPriceDate, timestamp: Number(tx.timeStamp), transactions: [] };
 				}
 				if (!transactions[tx.blockNumber].transactions) {
 					transactions[tx.blockNumber].transactions = [];
@@ -266,7 +267,7 @@ const getTXs = async (transactions, page, action) => {
 				const ethValue = (tx[value] / 1000000000000000000);
 				const isDuplicate = await isDuplicateTx(transactions, tx.hash ? tx.hash : null, tx.blockNumber, ethValue, tx.timeStamp);
 				if (!isDuplicate) {
-					transactions[tx.blockNumber].transactions.push({ timeStamp: Number(tx.timeStamp), hash: tx.hash ? tx.hash : null, taxable, ethValue }); // convert from gwei
+					transactions[tx.blockNumber].transactions.push({ hash: tx.hash ? tx.hash : null, taxable, ethValue }); // convert from gwei
 				}
 			}
 			page += 1;
@@ -352,18 +353,19 @@ const getPrices = async (transactions, transactionCache) => {
 		}
 		progressBar.update(i + 1);
 	}
+	progressBar.update(numBlocks);
 	progressBar.stop();
 	return true;
 }
 
 /**
- * determine if a given timeStamp is within the range of a given startDate and endDate
- * @param {Number} timeStamp - unix timestamp
+ * determine if a given timestamp is within the range of a given startDate and endDate
+ * @param {Number} timestamp - unix timestamp
  * @param {string} [startDate] - startDate
  * @param {string} [endDate] - endDate
  * @returns {Boolean}
  */
-const isTransactionWithinDateRange = (timeStamp, startDate, endDate) => {
+const isTransactionWithinDateRange = (timestamp, startDate, endDate) => {
 	let startDateTime, endDateTime;
 	if (startDate) {
 		startDateTime = new Date(startDate).getTime();
@@ -372,10 +374,10 @@ const isTransactionWithinDateRange = (timeStamp, startDate, endDate) => {
 		endDateTime = new Date(endDate).getTime();
 	}
 	let valid = true;
-	if (startDate && startDateTime && (timeStamp * 1000) <= startDateTime) {
+	if (startDate && startDateTime && (timestamp * 1000) <= startDateTime) {
 		valid = false;
 	}
-	if (endDate && endDateTime && (timeStamp * 1000) >= endDateTime) {
+	if (endDate && endDateTime && (timestamp * 1000) >= endDateTime) {
 		valid = false;
 	}
 	return valid;
@@ -391,10 +393,11 @@ const isTransactionWithinDateRange = (timeStamp, startDate, endDate) => {
 const getSums = async (transactions, startDate, endDate) => {
 	let totals = { totalUSD: 0, totalETH: 0 };
 	Object.keys(transactions).forEach(function (thisBlock) {
+		const timestamp = Number(transactions[thisBlock].timestamp);
 		if (transactions[thisBlock].transactions) {
 			transactions[thisBlock].transactions.forEach(function (tx) {
 				if (tx.taxable) { // exclude uniswap change transactions because this data doesn't know about swaps for tax purposes
-					if (isTransactionWithinDateRange(tx.timeStamp, startDate, endDate)) {
+					if (isTransactionWithinDateRange(timestamp, startDate, endDate)) {
 						tx.usdValue = transactions[thisBlock].closingPrice * tx.ethValue;
 						totals.totalUSD += tx.usdValue;
 						totals.totalETH += tx.ethValue;
@@ -404,7 +407,7 @@ const getSums = async (transactions, startDate, endDate) => {
 		}
 		if (transactions[thisBlock].withdrawals) {
 			transactions[thisBlock].withdrawals.forEach(function (withdrawal) {
-				if (isTransactionWithinDateRange(withdrawal.timeStamp, startDate, endDate)) {
+				if (isTransactionWithinDateRange(timestamp, startDate, endDate)) {
 					withdrawal.usdValue = transactions[thisBlock].closingPrice * withdrawal.ethValue;
 					totals.totalUSD += withdrawal.usdValue;
 					totals.totalETH += withdrawal.ethValue;
@@ -427,15 +430,16 @@ const writeData = (transactions, startDate, endDate) => {
 	fs.writeFileSync(OUTPUTFILE, 'Date,Layer,USD Closing Price,USD Value,ETH,Block Number,Transaction Hash\n');
 	let outputData = {};
 	Object.keys(transactions).forEach(function (thisBlock) {
+		let timestamp = transactions[thisBlock].timestamp
 		if (transactions[thisBlock].transactions) {
 			transactions[thisBlock].transactions.forEach(function (tx) {
 				const dateParts = transactions[thisBlock].date.split('-');
 				const thisRationalDate = dateParts[1] + '-' + dateParts[0] + '-' + dateParts[2]; // change the date to mm-dd-yyyy
-				if (tx.taxable && isTransactionWithinDateRange(tx.timeStamp, startDate, endDate)) { // exclude non-taxable transactions because they're really change from uniswap and this data is PRE swapping
-					while (outputData[tx.timeStamp]) {
-						tx.timeStamp = tx.timeStamp + 1; // possible we have the same timestamp already, so add 1ms
+				if (tx.taxable && isTransactionWithinDateRange(timestamp, startDate, endDate)) { // exclude non-taxable transactions because they're really change from uniswap and this data is PRE swapping
+					while (outputData[timestamp]) {
+						timestamp = timestamp + 1; // possible we have the same timestamp already, so add 1ms
 					}
-					outputData[tx.timeStamp] = [thisRationalDate, 'EL', transactions[thisBlock].closingPrice, tx.usdValue, tx.ethValue, thisBlock, tx.hash];
+					outputData[timestamp] = [thisRationalDate, 'EL', transactions[thisBlock].closingPrice, tx.usdValue, tx.ethValue, thisBlock, tx.hash];
 				}
 			});
 		}
@@ -443,11 +447,11 @@ const writeData = (transactions, startDate, endDate) => {
 			transactions[thisBlock].withdrawals.forEach(function (withdrawal) {
 				const dateParts = transactions[thisBlock].date.split('-');
 				const thisRationalDate = dateParts[1] + '-' + dateParts[0] + '-' + dateParts[2]; // change the date to mm-dd-yyyy
-				if (isTransactionWithinDateRange(withdrawal.timeStamp, startDate, endDate)) {
-					while (outputData[withdrawal.timeStamp]) {
-						withdrawal.timeStamp = withdrawal.timeStamp + 1; // possible we have the same timestamp already, so add 1ms
+				if (isTransactionWithinDateRange(timestamp, startDate, endDate)) {
+					while (outputData[timestamp]) {
+						timestamp = timestamp + 1; // possible we have the same timestamp already, so add 1ms
 					}
-					outputData[withdrawal.timeStamp] = [thisRationalDate, 'CL', transactions[thisBlock].closingPrice, withdrawal.usdValue, withdrawal.ethValue, thisBlock];
+					outputData[timestamp] = [thisRationalDate, 'CL', transactions[thisBlock].closingPrice, withdrawal.usdValue, withdrawal.ethValue, thisBlock];
 				}
 			});
 		}
