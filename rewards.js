@@ -318,7 +318,6 @@ const getPrices = async (transactions, transactionCache) => {
 			if (Object.keys(prices).length > 0) { // use our secondary cache if available
 				if (prices[thisDate]['blocks'].indexOf(thisBlock) != -1) {
 					transactions[thisBlock].closingPrice = prices[thisDate].closingPrice;
-					console.log('2 got price:', prices[thisDate].closingPrice);
 					continue;
 				}
 			}
