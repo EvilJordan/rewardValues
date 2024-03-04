@@ -43,6 +43,7 @@ const NONTAXABLEADDRESSES = [ // change from using uniswap routers
 ];
 let transactions = {};
 let prices = {};
+let zeroAttempts = [];
 let startingTransactionBlockNumber = 0;
 let startingWithdrawalsBlockNumber = 17034893;
 let endingBlockNumber = 9999999999;
@@ -311,6 +312,9 @@ const getPrices = async (transactions, transactionCache) => {
 		const thisDateAdjustedCoinGecko = day + '-' + month + '-' + thisDateFormatted.getUTCFullYear(); // coingecko date is dd-mm-yyyy
 
 		if (thisDateTime < UTCTime()) { // check if thisDate > today, and if so, just return 0 since we don't have a closing price yet
+			if (zeroAttempts.indexOf(thisDate) !== -1) { // if thisDate exists in zeroAttempts, we've already tried to pull the price from coingecko this run, so don't try again
+				continue;
+			}
 			if (transactionCache[thisBlock] && transactionCache[thisBlock].closingPrice && transactionCache[thisBlock].closingPrice !== 0) { // if we already have this data in our "cache," don't pull it again
 				transactions[thisBlock].closingPrice = transactionCache[thisBlock].closingPrice;
 				continue;
@@ -339,6 +343,7 @@ const getPrices = async (transactions, transactionCache) => {
 			} else {
 				priceByDate[thisDate] = 0;
 				transactions[thisBlock].closingPrice = 0;
+				zeroAttempts.push(thisDate);
 			}
 			coingGeckoCalls++;
 			if (coingGeckoCalls >= COINGECKOREQUESTSIZE) { // coingecko limited to 30 calls per minute with Demo API key
@@ -349,6 +354,7 @@ const getPrices = async (transactions, transactionCache) => {
 		} else {
 			priceByDate[thisDate] = 0;
 			transactions[thisBlock].closingPrice = 0;
+			zeroAttempts.push(thisDate);
 		}
 		progressBar.update(i + 1);
 	}
