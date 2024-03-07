@@ -313,6 +313,7 @@ const getPrices = async (transactions, transactionCache) => {
 
 		if (thisDateTime < UTCTime()) { // check if thisDate > today, and if so, just return 0 since we don't have a closing price yet
 			if (zeroAttempts.indexOf(thisDate) !== -1) { // if thisDate exists in zeroAttempts, we've already tried to pull the price from coingecko this run, so don't try again
+				transactions[thisBlock].closingPrice = 0;
 				continue;
 			}
 			if (transactionCache[thisBlock] && transactionCache[thisBlock].closingPrice && transactionCache[thisBlock].closingPrice !== 0) { // if we already have this data in our "cache," don't pull it again
