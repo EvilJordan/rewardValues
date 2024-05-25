@@ -2,6 +2,7 @@ require('dotenv').config();
 const fs = require('fs');
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const { ethers } = require('ethers');
+const crypto = require('crypto');
 const cliProgress = require('cli-progress');
 const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
@@ -177,7 +178,7 @@ const getWithdrawals = async (transactions, page) => {
 				const ethValue = Number(ethers.formatUnits(tx.amount, 'gwei'));
 				const isDuplicate = await isDuplicateWithdrawal(transactions, tx.blockNumber, tx.withdrawalIndex);
 				if (!isDuplicate) {
-					transactions[tx.blockNumber].withdrawals.push({ withdrawalIndex: Number(tx.withdrawalIndex), ethValue });
+					transactions[tx.blockNumber].withdrawals.push({ withdrawalIndex: Number(tx.withdrawalIndex), ethValue, UUID: crypto.randomUUID() });
 				}
 			}
 			page += 1;
@@ -268,7 +269,7 @@ const getTXs = async (transactions, page, action) => {
 				const ethValue = (tx[value] / 1000000000000000000);
 				const isDuplicate = await isDuplicateTx(transactions, tx.hash ? tx.hash : null, tx.blockNumber, ethValue, tx.timeStamp);
 				if (!isDuplicate) {
-					transactions[tx.blockNumber].transactions.push({ hash: tx.hash ? tx.hash : null, taxable, ethValue }); // convert from gwei
+					transactions[tx.blockNumber].transactions.push({ hash: tx.hash ? tx.hash : null, taxable, ethValue, UUID: crypto.randomUUID() }); // convert from gwei
 				}
 			}
 			page += 1;
@@ -433,7 +434,7 @@ const getSums = async (transactions, startDate, endDate) => {
  */
 const writeData = (transactions, startDate, endDate) => {
 	fs.writeFileSync(TRANSACTIONCACHEFILE, JSON.stringify(transactions, null, 4)); // write out our "cache"
-	fs.writeFileSync(OUTPUTFILE, 'Date,Layer,USD Closing Price,USD Value,ETH,Block Number,Transaction Hash\n');
+	fs.writeFileSync(OUTPUTFILE, 'Date,Layer,USD Closing Price,USD Value,ETH,Block Number,Transaction Hash,UUID\n');
 	let outputData = {};
 	Object.keys(transactions).forEach(function (thisBlock) {
 		let timestamp = transactions[thisBlock].timestamp
@@ -445,7 +446,7 @@ const writeData = (transactions, startDate, endDate) => {
 					while (outputData[timestamp]) {
 						timestamp = timestamp + 1; // possible we have the same timestamp already, so add 1ms
 					}
-					outputData[timestamp] = [thisRationalDate, 'EL', transactions[thisBlock].closingPrice, tx.usdValue, tx.ethValue, thisBlock, tx.hash];
+					outputData[timestamp] = [thisRationalDate, 'EL', transactions[thisBlock].closingPrice, tx.usdValue, tx.ethValue, thisBlock, tx.hash ? tx.hash : null, tx.UUID];
 				}
 			});
 		}
@@ -457,7 +458,7 @@ const writeData = (transactions, startDate, endDate) => {
 					while (outputData[timestamp]) {
 						timestamp = timestamp + 1; // possible we have the same timestamp already, so add 1ms
 					}
-					outputData[timestamp] = [thisRationalDate, 'CL', transactions[thisBlock].closingPrice, withdrawal.usdValue, withdrawal.ethValue, thisBlock];
+					outputData[timestamp] = [thisRationalDate, 'CL', transactions[thisBlock].closingPrice, withdrawal.usdValue, withdrawal.ethValue, thisBlock, null, withdrawal.UUID];
 				}
 			});
 		}
