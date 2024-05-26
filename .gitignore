@@ -1,6 +1,7 @@
 .env
 .transactionCache.json
 .prices.json
+.serviceCredentials.json
 transactions.csv
 package-lock.json
 node_modules/
