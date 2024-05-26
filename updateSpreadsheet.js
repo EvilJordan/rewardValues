@@ -121,7 +121,7 @@ const go = async () => {
 			sheetsResponse = await sheets.spreadsheets.values.batchUpdate({
 				spreadsheetId: process.env.SPREADSHEETID,
 				requestBody: {
-					valueInputOption: 'RAW',
+					valueInputOption: 'USER_ENTERED',
 					data: operations.updates,
 				},
 			});
@@ -146,7 +146,7 @@ const go = async () => {
 				sheetsResponse = await sheets.spreadsheets.values.append({
 					spreadsheetId: process.env.SPREADSHEETID,
 					range: process.env.SPREADSHEETNAME,
-					valueInputOption: 'RAW',
+					valueInputOption: 'USER_ENTERED',
 					resource: operations.appends[i]
 				});
 			} catch(e) {
