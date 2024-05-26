@@ -1,4 +1,5 @@
 require('dotenv').config();
+process.removeAllListeners('warning'); // used to remove punycode deprecation warning until google gets its shit together and upgrades node-fetch
 const fs = require('fs');
 const { google } = require('googleapis');
 const serviceAuth = new google.auth.GoogleAuth({
