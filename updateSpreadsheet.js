@@ -140,20 +140,20 @@ const go = async () => {
 			});
 		});
 		let appendCounter = 0;
-		operations.appends.forEach(async (thisAppend) => {
+		for (i = 0; i < operations.appends.length; i++) {
 			try {
 				sheetsResponse = await sheets.spreadsheets.values.append({
 					spreadsheetId: process.env.SPREADSHEETID,
 					range: process.env.SPREADSHEETNAME,
 					valueInputOption: 'RAW',
-					resource: thisAppend
+					resource: operations.appends[i]
 				});
 			} catch(e) {
 				console.log(e);
 				return;
 			}
 			appendCounter++;
-		});
+		}
 		console.log('Appended', appendCounter, 'rows.');
 	}
 }
