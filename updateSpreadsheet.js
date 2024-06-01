@@ -135,27 +135,25 @@ const go = async () => {
 		console.log('Appending', operations.appendSheetUUIDS.length, 'rows...');
 		operations.appendSheetUUIDS.forEach((UUID) => {
 			// console.log('append:', transactions[UUID]);
-			operations.appends.push({
-				majorDimension: 'ROWS',
-				values: [[transactions[UUID].date, transactions[UUID].layer, transactions[UUID].closingPrice, transactions[UUID].usdValue, transactions[UUID].ethValue, transactions[UUID].blockNumber, transactions[UUID].hash ? transactions[UUID].hash : '', UUID]]
-			});
+			operations.appends.push(
+				[transactions[UUID].date, transactions[UUID].layer, transactions[UUID].closingPrice, transactions[UUID].usdValue, transactions[UUID].ethValue, transactions[UUID].blockNumber, transactions[UUID].hash ? transactions[UUID].hash : '', UUID]
+			);
 		});
-		let appendCounter = 0;
-		for (i = 0; i < operations.appends.length; i++) {
-			try {
-				sheetsResponse = await sheets.spreadsheets.values.append({
-					spreadsheetId: process.env.SPREADSHEETID,
-					range: process.env.SPREADSHEETNAME,
-					valueInputOption: 'USER_ENTERED',
-					resource: operations.appends[i]
-				});
-			} catch(e) {
-				console.log(e);
-				return;
-			}
-			appendCounter++;
+		try {
+			sheetsResponse = await sheets.spreadsheets.values.append({
+				spreadsheetId: process.env.SPREADSHEETID,
+				range: process.env.SPREADSHEETNAME,
+				valueInputOption: 'USER_ENTERED',
+				resource: {
+					majorDimension: 'ROWS',
+					values: operations.appends
+				}
+			});
+		} catch(e) {
+			console.log(e);
+			return;
 		}
-		console.log('Appended', appendCounter, 'rows.');
+		console.log('Appended', sheetsResponse.data.updates.updatedRows, 'rows.');
 	}
 }
 
