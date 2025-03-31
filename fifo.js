@@ -1,4 +1,3 @@
-require('dotenv').config();
 const fs = require('fs');
 const TRANSACTIONCACHEFILE = './.transactionCache.json';
 const SELLFILE = './sells.csv';
