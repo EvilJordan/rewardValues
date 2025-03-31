@@ -54,7 +54,7 @@ Etherscan's APIs are used to pull in transaction data, withdrawals (aka CL rewar
 - Specify fiat currency (from available Coingecko currencies)
 - User-specified output file
 - Add sum-by-date output option (this now exists in FIFO, but is not exposed externally)
-- Documentation on _optional_ Google Sheets connector
-- Documentation on _optional_ FIFO cost-basis and short/long-term capital gains
+- Documentation on _optional_ Google Sheets connector (`updateSpreadsheet.js`)
+- Documentation on _optional_ FIFO cost-basis and short/long-term capital gains functionality (`fifo.js`)
 
 ### _Disclaimer: I am not a tax professional, I know very, very little about anything at all, and I have no idea if the output report would be sufficient for any accountant or tax authority. I built this to help me calculate my own taxes and stay on top of things._
