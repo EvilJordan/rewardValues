@@ -3,5 +3,6 @@
 .prices.json
 .serviceCredentials.json
 transactions.csv
+sells.csv
 package-lock.json
 node_modules/
