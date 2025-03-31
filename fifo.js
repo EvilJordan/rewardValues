@@ -158,13 +158,15 @@ const go = async () => {
 	sortedTxData = null;
 
 	// transform sellCSV data into JSON object
-	sellsCSV = fs.readFileSync(SELLFILE, 'utf-8');
-	const lines = sellsCSV.split('\n');
+	let sellsCSV = fs.readFileSync(SELLFILE, 'utf-8');
+	let lines = sellsCSV.split('\n');
 	
 	for (let i = 0; i < lines.length; i++) {
 		const values = lines[i].split(',');
 		sells.push({ [values[0]]: { quantity: Number(values[1]), costBasis: 0, shortTerm: 0, longTerm: 0 } });
 	}
+	sellsCSV = null;
+	lines = null;
 
 	buyTotal = await getInventoryValueAndQuantity();
 	sellTotal = await getSellQuantity();
