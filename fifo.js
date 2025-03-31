@@ -83,7 +83,7 @@ const getInventoryValueAndQuantity = async () => {
 			quantity += item[thisDate].quantity;
 		});
 	}
-	console.log('Held ETH:', quantity);
+	console.log('Starting ETH:', quantity);
 	return quantity;
 }
 
