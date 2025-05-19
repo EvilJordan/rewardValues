@@ -9,6 +9,10 @@ const serviceAuth = new google.auth.GoogleAuth({
 google.options({ auth: serviceAuth });
 const sheets = google.sheets({ version: 'v4' });
 const TRANSACTIONCACHEFILE = './.transactionCache.json';
+const formatter = new Intl.NumberFormat('en-US', {
+	style: 'currency',
+	currency: 'USD'
+});
 
 const getSheetsTransactions = async () => {
 	let sheetsResponse;
@@ -109,6 +113,7 @@ const go = async () => {
 
 	if (operations.updateSheetUUIDs.length > 0) {
 		console.log('Updating', operations.updateSheetUUIDs.length, 'rows...');
+		let updateUSDTotal = 0;
 		operations.updateSheetUUIDs.forEach((UUID) => {
 			// console.log('update (' + sheetTransactions[UUID].rowNum + '):', sheetTransactions[UUID], transactions[UUID]);
 			operations.updates.push({
@@ -116,6 +121,7 @@ const go = async () => {
 				range: process.env.SPREADSHEETNAME + '!C' + sheetTransactions[UUID].rowNum + ':D' + sheetTransactions[UUID].rowNum,
 				values: [[transactions[UUID].closingPrice, transactions[UUID].usdValue]]
 			});
+			updateUSDTotal += transactions[UUID].usdValue;
 		});
 		try {
 			sheetsResponse = await sheets.spreadsheets.values.batchUpdate({
@@ -129,15 +135,19 @@ const go = async () => {
 			console.log(e.errors);
 			return;
 		}
-		console.log('Updated', sheetsResponse.data.totalUpdatedRows, 'rows.');
+		console.log('Updated', sheetsResponse.data.totalUpdatedRows, 'rows:', '\x1b[32m' + formatter.format(updateUSDTotal) + '\x1b[0m');
 	}
 	if (operations.appendSheetUUIDS.length > 0) {
 		console.log('Appending', operations.appendSheetUUIDS.length, 'rows...');
+		let appendUSDTotal = 0;
+		let appendETHTotal = 0;
 		operations.appendSheetUUIDS.forEach((UUID) => {
 			// console.log('append:', transactions[UUID]);
 			operations.appends.push(
 				[transactions[UUID].date, transactions[UUID].layer, transactions[UUID].closingPrice, transactions[UUID].usdValue, transactions[UUID].ethValue, transactions[UUID].blockNumber, transactions[UUID].hash ? transactions[UUID].hash : '', UUID]
 			);
+			appendUSDTotal += transactions[UUID].usdValue;
+			appendETHTotal += transactions[UUID].ethValue;
 		});
 		try {
 			sheetsResponse = await sheets.spreadsheets.values.append({
@@ -153,7 +163,7 @@ const go = async () => {
 			console.log(e);
 			return;
 		}
-		console.log('Appended', sheetsResponse.data.updates.updatedRows, 'rows.');
+		console.log('Appended', sheetsResponse.data.updates.updatedRows, 'rows:', '\x1b[32m' + formatter.format(appendUSDTotal) + '\x1b[0m', '\x1b[33m' + appendETHTotal + '\x1b[0m');
 	}
 }
 
