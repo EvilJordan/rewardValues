@@ -163,7 +163,9 @@ const go = async () => {
 	
 	for (let i = 0; i < lines.length; i++) {
 		const values = lines[i].split(',');
-		sells.push({ [values[0]]: { quantity: Number(values[1]), costBasis: 0, shortTerm: 0, longTerm: 0 } });
+		if (values[0]) {
+			sells.push({ [values[0]]: { quantity: Number(values[1]), costBasis: 0, shortTerm: 0, longTerm: 0 } });
+		}
 	}
 	sellsCSV = null;
 	lines = null;
