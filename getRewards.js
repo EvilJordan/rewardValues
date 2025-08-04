@@ -147,7 +147,7 @@ const isDuplicateWithdrawal = async (transactions, blockNumber, withdrawalIndex)
  */
 const getWithdrawals = async (transactions, page) => {
 	let params = '&startblock=' + startingWithdrawalsBlockNumber + '&endblock=' + endingBlockNumber;
-	const URL = 'https://api.etherscan.io/api?module=account&action=txsBeaconWithdrawal&address=' + ADDRESS + params + '&page=' + page + '&offset=1000&sort=asc&apikey=' + ETHERSCANAPIKEY;
+	const URL = 'https://api.etherscan.io/v2/api?chainid=1&module=account&action=txsBeaconWithdrawal&address=' + ADDRESS + params + '&page=' + page + '&offset=1000&sort=asc&apikey=' + ETHERSCANAPIKEY;
 	const request = await fetch(URL, {
 		method: 'GET'
 	});
@@ -225,7 +225,7 @@ const getTXs = async (transactions, page, action) => {
 	if (action !== 'txlist') {
 		params = '&blocktype=blocks';
 	}
-	const URL = 'https://api.etherscan.io/api?module=account&action=' + action + '&address=' + ADDRESS + params + '&page=' + page + '&offset=1000&sort=asc&apikey=' + ETHERSCANAPIKEY;
+	const URL = 'https://api.etherscan.io/v2/api?chainid=1&module=account&action=' + action + '&address=' + ADDRESS + params + '&page=' + page + '&offset=1000&sort=asc&apikey=' + ETHERSCANAPIKEY;
 	const request = await fetch(URL, {
 		method: 'GET'
 	});
