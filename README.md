@@ -6,14 +6,14 @@ Now including _optional_ Google Sheets connectivity!
 
 Now NOW including _optional_ First In, First Out captial gains and cost-basis accounting!
 
-This script assumes **all** incoming transactions are Execution Layer proposal rewards and purposefully _excludes_ Uniswap Routers from any incoming internal transaction data.
+This script assumes **all** incoming transactions are Execution Layer proposal rewards and purposefully _excludes_ Uniswap Routers from any incoming internal transaction data. Other addresses can be excluded by modifying the `NONTAXABLEADDRESSES` constant.
 
 ## Install, Setup, and Running
 
 1. run `npm install`
 2. Create a `.env` file and add:
 ```attributes
-ADDRESS=0X_ETHEREUM_ADDRESS
+ADDRESS=0X_ETHEREUM_WITHDRAWAL_ADDRESS
 ETHERSCANAPIKEY=YOUR_ETHERSCAN_API_KEY
 COINGECKOAPIKEY=YOUR_COINGECKO_API_KEY
 SPREADSHEETID=GOOGLE_SHEETS_SPREADSHEET_ID # optional
@@ -31,7 +31,7 @@ If progress seems to stop, it's because the code is backing off the APIs for a m
 
 Examples:
 ```console
-# get everything - note, you may need to run this multiple times if there are more than 10,000 transactions or withdrawals
+# get everything - note, you may need to run this multiple times if there are more than 10,000 transactions or withdrawals. The script will pick up where it last left off.
 node getRewards
 
 # get all EL rewards from 4/13/2023 - 4/15/2023 and all CL withdrawals in blocks 17034893 through 17034895
@@ -39,6 +39,9 @@ node getRewards --startDate 04-13-2023 --endDate 04-15-2023 --startBlock 1703489
 
 # get all EL ever for an address and all CL withdrawals in blocks 17034893 through 17034895
 node getRewards -b 17034893 -c 17034895
+
+# get everything and then update Google Sheets (requires additional configuration to connect to Google Drive, not yet documented here)
+node getRewards && node updateSpreadsheet
 ```
 ---
 
@@ -50,7 +53,7 @@ Etherscan's APIs are used to pull in transaction data, withdrawals (aka CL rewar
 ---
 
 ## TODO:
-- Accept multiple addresses
+- Accept multiple withdrawal addresses
 - Specify fiat currency (from available Coingecko currencies)
 - User-specified output file
 - Add sum-by-date output option (this now exists in FIFO, but is not exposed externally)
