@@ -53,6 +53,7 @@ Etherscan's APIs are used to pull in transaction data, withdrawals (aka CL rewar
 ---
 
 ## TODO:
+- **Replace Etherscan's `txlistinternal` call with Alchemy before July 1st, 2026**
 - Accept multiple withdrawal addresses
 - Specify fiat currency (from available Coingecko currencies)
 - User-specified output file
